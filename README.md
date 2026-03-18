@@ -32,10 +32,12 @@ The API exposes two endpoints:
 ### 1. Create & activate virtual environment
 
 PowerShell:  
+
     python -m venv venv  
     .\venv\Scripts\Activate.ps1  
 
 Command Prompt:  
+
     venv\Scripts\activate.bat  
 
 ### 2. Install dependencies
