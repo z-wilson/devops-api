@@ -79,7 +79,7 @@ Command Prompt:
 ## Roadmap
 
 - [x] Minimal Flask API  
-- [ ] Docker containerization  
+- [x] Docker containerization  
 - [ ] Push image to AWS ECR  
 - [ ] Deploy to ECS (Fargate)  
 - [ ] CI/CD pipeline (GitHub Actions)  
