@@ -74,14 +74,22 @@ Command Prompt:
 
     docker run -p 5000:5000 devops-api  
 
+### Tag container
+
+    docker tag devops-api:latest <account-id>.dkr.ecr.<region>.amazonaws.com/devops-api:latest
+
+### Push container
+
+    docker push <account-id>.dkr.ecr.<region>.amazonaws.com/devops-api:latest
+
 ---
 
 ## Roadmap
 
 - [x] Minimal Flask API  
 - [x] Docker containerization  
-- [ ] Push image to AWS ECR  
-- [ ] Deploy to ECS (Fargate)  
+- [x] Push image to AWS ECR  
+- [x] Deploy to ECS (Fargate)  
 - [ ] CI/CD pipeline (GitHub Actions)  
 - [ ] Multi-environment deployment (dev/prod)  
 - [ ] Infrastructure as Code (Terraform)  
