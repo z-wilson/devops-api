@@ -57,10 +57,11 @@ Command Prompt:
 
 ## Environment Variables
 
-| Variable | Description      | Default  |
-|----------|------------------|----------|
-| ENV      | Environment name | dev-env  |
-| PORT     | Application port | 5000     |
+| Variable     | Description                                      | Default |
+|--------------|--------------------------------------------------|---------|
+| ENV          | Environment name                                 | dev-env |
+| PORT         | Application port                                 | 5000    |
+| APP_VERSION  | Application version (set by CI/CD from Git tag)  | v1.0    |
 
 ---
 
@@ -84,13 +85,132 @@ Command Prompt:
 
 ---
 
+## CI/CD Pipeline
+
+This project uses GitHub Actions to automate build and deployment to AWS ECS.
+
+### Trigger
+
+The pipeline runs when a Git tag is pushed:
+
+    v*
+
+Example:
+
+    git tag v1.8  
+    git push origin v1.8
+
+---
+
+### What the pipeline does
+
+1. Builds a Docker image from the latest code  
+2. Tags the image with the Git tag (for example v1.8)  
+3. Pushes the image to Amazon ECR  
+4. Creates a new ECS task definition revision  
+5. Injects environment variable:  
+   APP_VERSION = `git tag`  
+6. Deploys the updated task definition to ECS (Fargate)
+
+---
+
+### Versioning
+
+The application version displayed by the API is derived from:
+
+    APP_VERSION (environment variable)
+
+This value is automatically set to the Git tag during deployment.
+
+Example:
+
+    Git tag: v1.8  
+    APP_VERSION in container: v1.8  
+    API response: v1.8
+
+---
+
+### Deployment behavior
+
+- Each tag results in a new ECS task definition revision  
+- ECS performs a rolling deployment:
+  - Starts new task(s)  
+  - Waits for health checks  
+  - Stops old task(s)  
+- No downtime (assuming health checks pass)
+
+---
+
+## Deployment
+
+### Create a new release
+
+#### 1. Commit and push your changes to the main branch
+
+    git add .  
+    git commit -m "Update feature"  
+    git push origin main  
+
+#### 2. Create and push a Git tag
+
+    git tag v1.8  
+    git push origin v1.8  
+
+#### 3. Monitor deployment
+
+- GitHub Actions workflow run
+- AWS ECS service deployment status
+
+---
+
+## Verify Deployment
+
+After deployment completes:
+
+- Check ECS service:
+  - Desired count = 1  
+  - Running count = 1  
+- Confirm task definition revision updated  
+- Verify environment variable:
+  APP_VERSION = v1.8  
+- Test endpoint:
+
+    curl <http://service-url/>  
+
+Expected response includes:  
+
+    Version: v1.8
+
+---
+
+## Troubleshooting
+
+### Deployment triggered but version did not update
+
+- Ensure a new Git tag was pushed  
+- Confirm GitHub Actions completed successfully  
+- Verify ECS service updated to a new task definition revision  
+
+### App version not changing
+
+- Check that APP_VERSION is being set in the task definition  
+- Verify the application reads it using:
+  os.getenv("APP_VERSION")  
+
+### Container unreachable
+
+- Confirm container port matches task definition (for example 5000)  
+- Verify load balancer target group health (if applicable)  
+
+---
+
 ## Roadmap
 
 - [x] Minimal Flask API  
 - [x] Docker containerization  
 - [x] Push image to AWS ECR  
 - [x] Deploy to ECS (Fargate)  
-- [ ] CI/CD pipeline (GitHub Actions)  
+- [x] CI/CD pipeline (GitHub Actions)  
 - [ ] Multi-environment deployment (dev/prod)  
 - [ ] Infrastructure as Code (Terraform)  
 
