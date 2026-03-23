@@ -204,6 +204,21 @@ Expected response includes:
 
 ---
 
+## Cleanup Guidance
+
+To stop incurring costs when not actively using the environment:
+
+- Set ECS service desired count to 0 to stop running tasks (Cluster -> Service -> Update service -> set Desired Tasks to 0)*
+- Delete unused ECS services if no longer needed
+- Remove old ECR images if storage grows
+- Ensure no orphaned resources remain (tasks, target groups, logs)
+
+*Optional: AWS CLI
+
+    aws ecs update-service --cluster devops-cluster --service devops-api-service --desired-count 0
+
+---
+
 ## Roadmap
 
 - [x] Minimal Flask API  
