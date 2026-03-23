@@ -26,7 +26,7 @@ jobs:
       - name: Login to ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Extract tag
+      - name: Extract Git tag
         id: vars
         run: echo "TAG=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
@@ -36,9 +36,19 @@ jobs:
           docker tag devops-api:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
           docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
 
+      - name: Render task definition with APP_VERSION
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs-task-def.json # Path to your ECS task definition JSON
+          container-name: devops-api # Container name in task definition
+          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
+          environment-variables: |
+            APP_VERSION=${{ steps.vars.outputs.TAG }}
+
       - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster devops-cluster \
-            --service devops-api-service \
-            --force-new-deployment
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: devops-api-service
+          cluster: devops-cluster
