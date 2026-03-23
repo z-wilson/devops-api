@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-VERSION = "1.0.1"
+VERSION = os.getenv("APP_VERSION", "unknown")
 
 @app.route('/')
 def home():
