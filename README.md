@@ -85,6 +85,16 @@ Command Prompt:
 
 ---
 
+## GitHub Secrets Required
+
+Before the CI/CD pipeline will run, add the following secret to your GitHub repo (Settings → Secrets and variables → Actions):
+
+| Secret           | Description                        |
+|------------------|------------------------------------|
+| `AWS_ACCOUNT_ID` | Your 12-digit AWS account number   |
+
+---
+
 ## CI/CD Pipeline
 
 This project uses GitHub Actions to automate build and deployment to AWS ECS.
