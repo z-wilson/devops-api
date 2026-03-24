@@ -183,11 +183,13 @@ After deployment completes:
 - Confirm task definition revision updated  
 - Verify environment variable:
   APP_VERSION = v1.8  
+- Find the public IP: ECS → Clusters → `devops-cluster` → Tasks tab → click the running task → Network section → Public IP
+
 - Test endpoint:
 
-    curl <http://service-url/>  
+    curl http://PUBLIC_IP:5000/
 
-Expected response includes:  
+Expected response includes:
 
     Version: v1.8
 
