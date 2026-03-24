@@ -20,7 +20,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::YOUR_AWS_ACCOUNT_ID:role/github-oidc-devops-api
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-devops-api
           aws-region: us-east-2
 
       - name: Login to ECR
@@ -33,8 +33,11 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -t devops-api .
-          docker tag devops-api:latest YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
-          docker push YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
+          docker tag devops-api:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
+
+      - name: Inject AWS account ID into task definition
+        run: sed -i 's/YOUR_AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/g' ecs-task-def.json
 
       - name: Render task definition with APP_VERSION
         id: task-def
@@ -42,7 +45,7 @@ jobs:
         with:
           task-definition: ecs-task-def.json # Path to your ECS task definition JSON
           container-name: devops-api # Container name in task definition
-          image: YOUR_AWS_ACCOUNT_ID.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
           environment-variables: |
             APP_VERSION=${{ steps.vars.outputs.TAG }}
 
