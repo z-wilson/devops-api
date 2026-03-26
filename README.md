@@ -97,7 +97,7 @@ Before the CI/CD pipeline will run, add the following secret to your GitHub repo
 
 ## CI/CD Pipeline
 
-This project uses GitHub Actions to automate build and deployment to AWS ECS.
+This project uses GitHub Actions to automate build and deployment to AWS Elastic Container Service (ECS).
 
 ### Triggers
 
