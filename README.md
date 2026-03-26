@@ -239,8 +239,22 @@ To stop incurring costs when not actively using the environment:
 
 *Optional: AWS CLI
 
+    # set desired count of service tasks
     aws ecs update-service --cluster devops-cluster --service devops-api-service --desired-count 0
     aws ecs update-service --cluster devops-cluster-dev --service devops-api-service-dev --desired-count 0
+
+    # confirm desired count of service tasks
+    aws ecs describe-services \
+        --cluster devops-cluster \
+        --services devops-api-service \
+        --region us-east-2 \
+        --query "services[0].{desired:desiredCount,running:runningCount}"
+
+    aws ecs describe-services \
+        --cluster devops-cluster-dev \
+        --services devops-api-service-dev \
+        --region us-east-2 \
+        --query "services[0].{desired:desiredCount,running:runningCount}"
 
 ---
 
