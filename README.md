@@ -238,7 +238,7 @@ To stop incurring costs when not actively using the environment:
 - [x] Push image to AWS ECR  
 - [x] Deploy to ECS (Fargate)  
 - [x] CI/CD pipeline (GitHub Actions)  
-- [ ] Multi-environment deployment (dev/prod)  
+- [x] Multi-environment deployment (dev/prod)
 - [ ] Infrastructure as Code (Terraform)  
 
 ---
