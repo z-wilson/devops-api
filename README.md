@@ -163,20 +163,22 @@ Example (prod):
 
 ## Deployment
 
-### Create a new release
+### 1. Dev deployment — push to main
 
-#### 1. Commit and push your changes to the main branch
+Pushing to `main` triggers the dev pipeline automatically.
 
-    git add .  
-    git commit -m "Update feature"  
-    git push origin main  
+    git add .
+    git commit -m "Update feature"
+    git push origin main
 
-#### 2. Create and push a Git tag
+### 2. Prod deployment — create and push a Git tag
 
-    git tag v1.8  
-    git push origin v1.8  
+Pushing a `v*` tag triggers the prod pipeline.
 
-#### 3. Monitor deployment
+    git tag v1.8
+    git push origin v1.8
+
+### 3. Monitor deployment
 
 - GitHub Actions workflow run
 - AWS ECS service deployment status
@@ -187,11 +189,68 @@ Example (prod):
 
 After deployment completes:
 
-- Check ECS service:
+- Check ECS service*:
   - Desired count = 1
   - Running count = 1
 - Confirm task definition revision updated
-- Find the public IP: ECS → Clusters → select cluster → Tasks tab → click the running task → Network section → Public IP
+- Find the public IP in AWS console: ECS → Clusters → select cluster → Tasks tab → click the running task → Network section → Public IP
+
+*Optional: AWS CLI
+
+    # confirm desired count of service tasks
+    
+    # prod
+    aws ecs describe-services \
+        --cluster devops-cluster \
+        --services devops-api-service \
+        --region us-east-2 \
+        --query "services[0].{desired:desiredCount,running:runningCount}"
+
+    # dev
+    aws ecs describe-services \
+        --cluster devops-cluster-dev \
+        --services devops-api-service-dev \
+        --region us-east-2 \
+        --query "services[0].{desired:desiredCount,running:runningCount}"
+
+    # confirm task definition revision (check the ARN increments after each deploy)
+
+    # prod
+    aws ecs describe-services \
+        --cluster devops-cluster \
+        --services devops-api-service \
+        --region us-east-2 \
+        --query "services[0].taskDefinition"
+
+    # dev
+    aws ecs describe-services \
+        --cluster devops-cluster-dev \
+        --services devops-api-service-dev \
+        --region us-east-2 \
+        --query "services[0].taskDefinition"
+
+    # Get the public IP of the running task
+
+    # prod example
+    TASK_ARN=$(aws ecs list-tasks \
+        --cluster devops-cluster \
+        --service-name devops-api-service \
+        --region us-east-2 \
+        --query "taskArns[0]" \
+        --output text)
+
+    ENI_ID=$(aws ecs describe-tasks \
+        --cluster devops-cluster \
+        --tasks $TASK_ARN \
+        --region us-east-2 \
+        --query "tasks[0].attachments[0].details[?name=='networkInterfaceId'].value | [0]" \
+        --output text)
+
+    aws ec2 describe-network-interfaces \
+        --network-interface-ids $ENI_ID \
+        --region us-east-2 \
+        --query "NetworkInterfaces[0].Association.PublicIp" \
+        --output text
 
 - Test endpoint:
 
@@ -240,10 +299,12 @@ To stop incurring costs when not actively using the environment:
 *Optional: AWS CLI
 
     # set desired count of service tasks
+
     aws ecs update-service --cluster devops-cluster --service devops-api-service --desired-count 0
     aws ecs update-service --cluster devops-cluster-dev --service devops-api-service-dev --desired-count 0
 
     # confirm desired count of service tasks
+
     aws ecs describe-services \
         --cluster devops-cluster \
         --services devops-api-service \
