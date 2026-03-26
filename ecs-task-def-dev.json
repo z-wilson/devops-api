@@ -1,5 +1,5 @@
 {
-  "family": "devops-api",
+  "family": "devops-api-dev",
   "networkMode": "awsvpc",
   "requiresCompatibilities": [
     "FARGATE"
@@ -23,12 +23,16 @@
         {
           "name": "APP_VERSION",
           "value": "REPLACE_WITH_ENV"
+        },
+        {
+          "name": "ENV",
+          "value": "dev"
         }
       ],
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {
-          "awslogs-group": "/ecs/devops-api",
+          "awslogs-group": "/ecs/devops-api-dev",
           "awslogs-region": "us-east-2",
           "awslogs-stream-prefix": "ecs"
         }

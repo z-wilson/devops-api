@@ -2,11 +2,61 @@ name: Deploy to ECS
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*"
 
 jobs:
-  deploy:
+  deploy-dev:
+    if: github.ref_type == 'branch'
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-devops-api-dev
+          aws-region: us-east-2
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t devops-api-dev .
+          docker tag devops-api-dev:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api-dev:${{ github.sha }}
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api-dev:${{ github.sha }}
+
+      - name: Inject AWS account ID into task definition
+        run: sed -i 's/YOUR_AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/g' ecs-task-def-dev.json
+
+      - name: Render task definition with APP_VERSION
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs-task-def-dev.json
+          container-name: devops-api
+          image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api-dev:${{ github.sha }}
+          environment-variables: |
+            APP_VERSION=${{ github.sha }}
+
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: devops-api-service-dev
+          cluster: devops-cluster-dev
+
+  deploy-prod:
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
 
     permissions:
@@ -37,14 +87,14 @@ jobs:
           docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
 
       - name: Inject AWS account ID into task definition
-        run: sed -i 's/YOUR_AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/g' ecs-task-def.json
+        run: sed -i 's/YOUR_AWS_ACCOUNT_ID/${{ secrets.AWS_ACCOUNT_ID }}/g' ecs-task-def-prod.json
 
       - name: Render task definition with APP_VERSION
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ecs-task-def.json # Path to your ECS task definition JSON
-          container-name: devops-api # Container name in task definition
+          task-definition: ecs-task-def-prod.json
+          container-name: devops-api
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-2.amazonaws.com/devops-api:${{ steps.vars.outputs.TAG }}
           environment-variables: |
             APP_VERSION=${{ steps.vars.outputs.TAG }}
