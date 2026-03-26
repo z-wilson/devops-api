@@ -99,44 +99,54 @@ Before the CI/CD pipeline will run, add the following secret to your GitHub repo
 
 This project uses GitHub Actions to automate build and deployment to AWS ECS.
 
-### Trigger
+### Triggers
 
-The pipeline runs when a Git tag is pushed:
+| Event | Environment |
+| --- | --- |
+| Push to `main` | Dev |
+| Push tag `v*` | Prod |
 
-    v*
+Example (dev):
 
-Example:
+    git push origin main
 
-    git tag v1.8  
+Example (prod):
+
+    git tag v1.8
     git push origin v1.8
 
 ---
 
 ### What the pipeline does
 
-1. Builds a Docker image from the latest code  
-2. Tags the image with the Git tag (for example v1.8)  
-3. Pushes the image to Amazon ECR  
-4. Creates a new ECS task definition revision  
-5. Injects environment variable:  
-   APP_VERSION = `git tag`  
-6. Deploys the updated task definition to ECS (Fargate)
+**Dev** (on push to `main`):
+
+1. Builds a Docker image from the latest code
+2. Tags the image with the commit SHA
+3. Pushes the image to ECR (`devops-api-dev`)
+4. Creates a new ECS task definition revision
+5. Injects `APP_VERSION` = commit SHA
+6. Deploys to `devops-cluster-dev`
+
+**Prod** (on `v*` tag):
+
+1. Builds a Docker image from the latest code
+2. Tags the image with the Git tag (for example v1.8)
+3. Pushes the image to ECR (`devops-api`)
+4. Creates a new ECS task definition revision
+5. Injects `APP_VERSION` = Git tag
+6. Deploys to `devops-cluster`
 
 ---
 
 ### Versioning
 
-The application version displayed by the API is derived from:
+`APP_VERSION` is automatically injected at deploy time:
 
-    APP_VERSION (environment variable)
-
-This value is automatically set to the Git tag during deployment.
-
-Example:
-
-    Git tag: v1.8  
-    APP_VERSION in container: v1.8  
-    API response: v1.8
+| Environment | Value |
+| --- | --- |
+| Dev | Commit SHA |
+| Prod | Git tag (e.g. `v1.8`) |
 
 ---
 
