@@ -188,20 +188,22 @@ Example (prod):
 After deployment completes:
 
 - Check ECS service:
-  - Desired count = 1  
-  - Running count = 1  
-- Confirm task definition revision updated  
-- Verify environment variable:
-  APP_VERSION = v1.8  
-- Find the public IP: ECS → Clusters → `devops-cluster` → Tasks tab → click the running task → Network section → Public IP
+  - Desired count = 1
+  - Running count = 1
+- Confirm task definition revision updated
+- Find the public IP: ECS → Clusters → select cluster → Tasks tab → click the running task → Network section → Public IP
 
 - Test endpoint:
 
     curl http://PUBLIC_IP:5000/
 
-Expected response includes:
+**Dev** — expected response:
 
-    Version: v1.8
+    {"env": "dev", "version": "<commit-sha>"}
+
+**Prod** — expected response:
+
+    {"env": "prod", "version": "v1.11"}
 
 ---
 
@@ -238,6 +240,7 @@ To stop incurring costs when not actively using the environment:
 *Optional: AWS CLI
 
     aws ecs update-service --cluster devops-cluster --service devops-api-service --desired-count 0
+    aws ecs update-service --cluster devops-cluster-dev --service devops-api-service-dev --desired-count 0
 
 ---
 
