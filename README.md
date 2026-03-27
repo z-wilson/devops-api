@@ -1,9 +1,10 @@
 # DevOps API Demo
 
+[![Deploy](https://github.com/z-wilson/devops-api/actions/workflows/deploy.yml/badge.svg)](https://github.com/z-wilson/devops-api/actions/workflows/deploy.yml)
+
 ## Overview
 
-This project is a minimal Python Flask API designed to demonstrate end-to-end DevOps workflows.
-It’s intended for learning containerization, CI/CD, and deployment to AWS from a Windows environment.
+This project is a minimal Python Flask API demonstrating end-to-end DevOps workflows: containerization, CI/CD, and deployment to AWS from a Windows environment.
 
 The focus is on packaging, deployment, and operational workflows, not the app itself. The setup is intentionally minimal (no load balancing or NAT gateways) to keep costs low while demonstrating a full end-to-end pipeline.
 
@@ -337,13 +338,13 @@ To stop incurring costs when not actively using the environment:
 
 ---
 
-## Features
+## What This Demonstrates
 
-- [x] Minimal Flask API  
-- [x] Docker containerization  
-- [x] Push image to AWS ECR  
-- [x] Deploy to ECS (Fargate)  
-- [x] CI/CD pipeline (GitHub Actions)  
+- [x] Minimal Flask API
+- [x] Docker containerization
+- [x] Push image to AWS ECR
+- [x] Deploy to ECS (Fargate)
+- [x] CI/CD pipeline (GitHub Actions)
 - [x] Multi-environment deployment (dev/prod)
 
 Infrastructure as Code (Terraform) for these resources will be covered in a separate repository which will be linked here upon completion.
