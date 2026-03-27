@@ -339,5 +339,3 @@ To stop incurring costs when not actively using the environment:
 - [x] Deploy to ECS (Fargate)
 - [x] CI/CD pipeline (GitHub Actions)
 - [x] Multi-environment deployment (dev/prod)
-
-Infrastructure as Code (Terraform) for these resources will be covered in a separate repository which will be linked here upon completion.
