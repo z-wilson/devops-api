@@ -201,6 +201,9 @@ After deployment completes:
   - Running count = 1
 - Confirm task definition revision updated
 - Find the public IP in AWS console: ECS → Clusters → select cluster → Tasks tab → click the running task → Network section → Public IP
+- Test endpoint:
+
+    curl http://$PUBLIC_IP:5000/
 
 *Optional: AWS CLI
 
@@ -258,16 +261,6 @@ After deployment completes:
         --region us-east-2 \
         --query "NetworkInterfaces[0].Association.PublicIp" \
         --output text
-
-- Test endpoint:
-
-    PUBLIC_IP=$(aws ec2 describe-network-interfaces \
-        --network-interface-ids $ENI_ID \
-        --region us-east-2 \
-        --query "NetworkInterfaces[0].Association.PublicIp" \
-        --output text)
-
-    curl http://$PUBLIC_IP:5000/
 
 **Dev** — expected response:
 
