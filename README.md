@@ -2,10 +2,10 @@
 
 ## Overview
 
-This project is a minimal Python Flask API designed to demonstrate end-to-end DevOps workflows.  
+This project is a minimal Python Flask API designed to demonstrate end-to-end DevOps workflows.
 It’s intended for learning containerization, CI/CD, and deployment to AWS from a Windows environment.
 
-The focus is on packaging, deployment, and operational workflows, not the app itself.
+The focus is on packaging, deployment, and operational workflows, not the app itself. The setup is intentionally minimal (no load balancing or NAT gateways) to keep costs low while demonstrating a full end-to-end pipeline.
 
 ---
 
@@ -69,11 +69,15 @@ Command Prompt:
 
 ### Build image
 
-    docker build -t devops-api .  
+    docker build -t devops-api .
 
 ### Run container
 
-    docker run -p 5000:5000 devops-api  
+    docker run -p 5000:5000 devops-api
+
+### Authenticate with ECR
+
+    aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
 
 ### Tag container
 
@@ -89,9 +93,11 @@ Command Prompt:
 
 Before the CI/CD pipeline will run, add the following secret to your GitHub repo (Settings → Secrets and variables → Actions):
 
-| Secret           | Description                        |
-|------------------|------------------------------------|
-| `AWS_ACCOUNT_ID` | Your 12-digit AWS account number   |
+| Secret           | Description                      |
+|------------------|----------------------------------|
+| `AWS_ACCOUNT_ID` | Your 12-digit AWS account number |
+
+The pipeline authenticates to AWS using OIDC — no long-lived access keys required. The IAM role ARNs are hardcoded in the workflow and assumed at runtime (`github-oidc-devops-api-dev` for dev, `github-oidc-devops-api` for prod). Each role must have a trust policy allowing `token.actions.githubusercontent.com` as the federated identity provider, scoped to this repository.
 
 ---
 
@@ -254,7 +260,13 @@ After deployment completes:
 
 - Test endpoint:
 
-    curl http://PUBLIC_IP:5000/
+    PUBLIC_IP=$(aws ec2 describe-network-interfaces \
+        --network-interface-ids $ENI_ID \
+        --region us-east-2 \
+        --query "NetworkInterfaces[0].Association.PublicIp" \
+        --output text)
+
+    curl http://$PUBLIC_IP:5000/
 
 **Dev** — expected response:
 
@@ -280,10 +292,16 @@ After deployment completes:
 - Verify the application reads it using:
   os.getenv("APP_VERSION")  
 
+### Task stuck in PENDING or PROVISIONING
+
+- Check the subnet assigned to the ECS service has a route to the internet (this setup uses no NAT, so a public subnet with auto-assign public IP enabled is required)
+- Verify the security group allows outbound traffic so the task can pull the image from ECR
+- Confirm the task execution role has `ecr:GetAuthorizationToken`, `ecr:BatchGetImage`, and `logs:CreateLogStream` permissions
+
 ### Container unreachable
 
-- Confirm container port matches task definition (for example 5000)  
-- Verify load balancer target group health (if applicable)  
+- Confirm container port matches task definition (for example 5000)
+- Verify load balancer target group health (if applicable)
 
 ---
 
@@ -319,7 +337,7 @@ To stop incurring costs when not actively using the environment:
 
 ---
 
-## Roadmap
+## Features
 
 - [x] Minimal Flask API  
 - [x] Docker containerization  
@@ -327,11 +345,5 @@ To stop incurring costs when not actively using the environment:
 - [x] Deploy to ECS (Fargate)  
 - [x] CI/CD pipeline (GitHub Actions)  
 - [x] Multi-environment deployment (dev/prod)
-- [ ] Infrastructure as Code (Terraform)  
 
----
-
-## Notes
-
-- Designed for learning and internal experimentation, not production.  
-- Docker and ECS setup is kept to minimal cost, no load balancing or NAT gateways.  
+Infrastructure as Code (Terraform) will be covered in a separate repository.
